@@ -1,8 +1,5 @@
 import React, { useState } from "react";
 import JSZip from "jszip";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { MermaidRenderer } from "./MermaidRenderer";
 
 interface DocEntry {
   name: string;
@@ -19,10 +16,26 @@ interface Props {
   onClose: () => void;
 }
 
+type ExportStep = "choose" | "select-docs";
+
 export function ExportModal({ documents, flows, projectName, readinessScore, onClose }: Props) {
   const [exporting, setExporting] = useState(false);
+  const [step, setStep] = useState<ExportStep>("choose");
 
   const allDocs = [...documents, ...flows];
+  const [selected, setSelected] = useState<Set<string>>(() => new Set(allDocs.map((d) => d.path)));
+
+  const toggleDoc = (path: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
+  };
+
+  const selectAll = () => setSelected(new Set(allDocs.map((d) => d.path)));
+  const selectNone = () => setSelected(new Set());
 
   const handleExportZip = async () => {
     setExporting(true);
@@ -30,7 +43,6 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
       const zip = new JSZip();
       const folder = zip.folder("blueprint")!;
       for (const doc of allDocs) {
-        // Preserve directory structure (e.g. .blueprint/flows/auth.md)
         const fileName = doc.path.replace(/^\.blueprint\//, "");
         folder.file(fileName, doc.content);
       }
@@ -46,25 +58,22 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
     }
   };
 
-  let mermaidCounter = 0;
-
   const handleExportPdf = () => {
-    // Build a new window with all docs styled for print
+    const selectedDocs = allDocs.filter((d) => selected.has(d.path));
+    if (selectedDocs.length === 0) return;
+
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
-    // We'll render a styled HTML page and trigger print
     const coverDate = new Date().toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
 
-    // Render all mermaid blocks to SVG first, then build the page
-    // For simplicity, we'll use the rendered content from the current DOM
-    // and build a print-optimized page
-    const docSections = allDocs.map((doc) => {
-      return `
+    const docSections = selectedDocs
+      .map(
+        (doc) => `
         <div class="doc-section">
           <div class="doc-header">
             <h2>${doc.name}</h2>
@@ -74,8 +83,9 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
             ${markdownToHtml(doc.content)}
           </div>
         </div>
-      `;
-    }).join("\n");
+      `
+      )
+      .join("\n");
 
     const html = `<!DOCTYPE html>
 <html>
@@ -353,12 +363,16 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
   <div class="toc">
     <h2>Table of Contents</h2>
     <ul>
-      ${allDocs.map((doc, i) => `
+      ${selectedDocs
+        .map(
+          (doc, i) => `
         <li>
           <span class="num">${i + 1}</span>
           <span>${doc.name}</span>
         </li>
-      `).join("\n")}
+      `
+        )
+        .join("\n")}
     </ul>
   </div>
 
@@ -403,14 +417,12 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
         relationLabelColor: '#ffffff',
       },
     });
-    // Render each diagram individually so one failure doesn't block the rest
     const diagrams = document.querySelectorAll('.mermaid');
     for (let i = 0; i < diagrams.length; i++) {
       const el = diagrams[i];
       try {
         const { svg } = await mermaid.render('mermaid-' + i, el.textContent.trim());
         el.innerHTML = svg;
-        // Force white text inside SVG — override any inline styles Mermaid sets
         const svgEl = el.querySelector('svg');
         if (svgEl) {
           const styleEl = document.createElement('style');
@@ -423,15 +435,119 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
         el.classList.add('render-error');
       }
     }
-    setTimeout(() => window.print(), 300);
   </script>
 </body>
 </html>`;
 
     printWindow.document.write(html);
     printWindow.document.close();
+    onClose();
   };
 
+  // Step: select documents for PDF
+  if (step === "select-docs") {
+    const regularDocs = documents;
+    const flowDocs = flows;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="w-full max-w-lg rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-2xl">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-zinc-100">Select Documents</h2>
+              <p className="mt-0.5 text-xs text-zinc-500">
+                {selected.size} of {allDocs.length} selected
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="rounded-lg p-1 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Select all / none */}
+          <div className="mb-3 flex gap-3 text-xs">
+            <button onClick={selectAll} className="text-indigo-400 hover:text-indigo-300">
+              Select All
+            </button>
+            <button onClick={selectNone} className="text-zinc-500 hover:text-zinc-300">
+              Select None
+            </button>
+          </div>
+
+          {/* Document list */}
+          <div className="max-h-80 space-y-0.5 overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-800/30 p-2">
+            {regularDocs.length > 0 && (
+              <>
+                <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                  Documents
+                </div>
+                {regularDocs.map((doc) => (
+                  <label
+                    key={doc.path}
+                    className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-zinc-800"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected.has(doc.path)}
+                      onChange={() => toggleDoc(doc.path)}
+                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-700 text-indigo-500 focus:ring-indigo-500/30"
+                    />
+                    <span className="text-sm text-zinc-300">{doc.name}</span>
+                  </label>
+                ))}
+              </>
+            )}
+
+            {flowDocs.length > 0 && (
+              <>
+                <div className="mt-2 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                  Flows
+                </div>
+                {flowDocs.map((doc) => (
+                  <label
+                    key={doc.path}
+                    className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-zinc-800"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected.has(doc.path)}
+                      onChange={() => toggleDoc(doc.path)}
+                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-700 text-indigo-500 focus:ring-indigo-500/30"
+                    />
+                    <span className="text-sm text-zinc-300">{doc.name}</span>
+                  </label>
+                ))}
+              </>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="mt-4 flex items-center justify-between">
+            <button
+              onClick={() => setStep("choose")}
+              className="text-xs text-zinc-400 hover:text-zinc-200"
+            >
+              Back
+            </button>
+            <button
+              onClick={handleExportPdf}
+              disabled={selected.size === 0}
+              className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:opacity-40"
+            >
+              Generate PDF ({selected.size})
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Step: choose export type
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-2xl">
@@ -450,7 +566,7 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
         <div className="space-y-3">
           {/* PDF Option */}
           <button
-            onClick={handleExportPdf}
+            onClick={() => setStep("select-docs")}
             className="flex w-full items-center gap-4 rounded-lg border border-zinc-700 bg-zinc-800 p-4 text-left transition-colors hover:border-indigo-500/50 hover:bg-zinc-800/80"
           >
             <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-red-900/30">
@@ -459,9 +575,9 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
               </svg>
             </div>
             <div>
-              <div className="text-sm font-medium text-zinc-100">Download as PDF</div>
+              <div className="text-sm font-medium text-zinc-100">Export as PDF</div>
               <div className="text-xs text-zinc-400">
-                All documents with diagrams in a styled package — choose "Save as PDF" in the dialog
+                Select documents to include in a styled PDF package
               </div>
             </div>
           </button>
@@ -489,7 +605,7 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
         </div>
 
         <p className="mt-4 text-center text-[11px] text-zinc-500">
-          {allDocs.length} document{allDocs.length !== 1 ? "s" : ""} will be exported
+          {allDocs.length} document{allDocs.length !== 1 ? "s" : ""} available
         </p>
       </div>
     </div>
@@ -498,7 +614,6 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
 
 /** Simple markdown-to-HTML converter for the print page */
 function markdownToHtml(md: string): string {
-  // Extract code blocks FIRST (before HTML escaping corrupts them)
   const codeBlocks: string[] = [];
   let html = md.replace(/```\s*(\w*)\s*\n([\s\S]*?)```/g, (_, lang, code) => {
     const placeholder = `<!--CODEBLOCK_${codeBlocks.length}-->`;
@@ -511,10 +626,7 @@ function markdownToHtml(md: string): string {
     return placeholder;
   });
 
-  // Now escape HTML in the remaining text
   html = html.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-  // Restore code blocks
   html = html.replace(/&lt;!--CODEBLOCK_(\d+)--&gt;/g, (_, i) => codeBlocks[parseInt(i)]);
 
   // Tables
@@ -527,34 +639,21 @@ function markdownToHtml(md: string): string {
     return `<table><thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table>`;
   });
 
-  // Headers
   html = html.replace(/^#### (.+)$/gm, "<h4>$1</h4>");
   html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
   html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
   html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
 
-  // Bold and italic
   html = html.replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>");
   html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
   html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
 
-  // Inline code
   html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
-
-  // Blockquotes
   html = html.replace(/^&gt; (.+)$/gm, "<blockquote>$1</blockquote>");
-
-  // Unordered lists
   html = html.replace(/^- (.+)$/gm, "<li>$1</li>");
   html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, "<ul>$1</ul>");
-
-  // Horizontal rules
   html = html.replace(/^---$/gm, "<hr>");
-
-  // Links
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
-
-  // Paragraphs — wrap standalone text lines
   html = html.replace(/^(?!<[a-z])((?!<\/|<h|<p|<ul|<ol|<li|<pre|<table|<block|<hr|<div).+)$/gm, "<p>$1</p>");
 
   return html;
