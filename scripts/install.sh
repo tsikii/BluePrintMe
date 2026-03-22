@@ -4,6 +4,9 @@ set -e
 # BluePrintMe installer
 # Clones the repo and symlinks the CLI into PATH
 
+# Ensure we're in a valid directory (handles deleted cwd)
+cd "$HOME" 2>/dev/null || cd /tmp
+
 INSTALL_DIR="$HOME/.claude-skills/BluePrintMe"
 BIN_DIR="$HOME/.local/bin"
 BIN_NAME="blueprintme"
