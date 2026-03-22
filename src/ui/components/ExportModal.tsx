@@ -288,9 +288,12 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
     /* Mermaid diagrams — blueprint style */
     .mermaid {
       background:
-        repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(255,255,255,0.08) 19px, rgba(255,255,255,0.08) 20px),
-        repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(255,255,255,0.08) 19px, rgba(255,255,255,0.08) 20px),
-        #2854a0;
+        radial-gradient(ellipse at center, #3568b8 0%, #2854a0 50%, #1a3a6c 100%);
+      background-image:
+        radial-gradient(ellipse at center, #3568b8 0%, #2854a0 50%, #1a3a6c 100%),
+        repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(255,255,255,0.07) 19px, rgba(255,255,255,0.07) 20px),
+        repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(255,255,255,0.07) 19px, rgba(255,255,255,0.07) 20px);
+      background-blend-mode: normal, overlay, overlay;
       border: 1px solid rgba(255,255,255,0.3);
       border-radius: 8px;
       padding: 1.5rem;

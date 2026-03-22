@@ -115,7 +115,8 @@ export function MermaidRenderer({ code, id }: Props) {
       className="mermaid-container my-4 flex justify-center overflow-x-auto rounded-lg border border-white/20 p-6 shadow-lg shadow-blue-950/50"
       style={{
         backgroundColor: "#2854a0",
-        backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(255,255,255,0.06) 19px, rgba(255,255,255,0.06) 20px), repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(255,255,255,0.06) 19px, rgba(255,255,255,0.06) 20px)",
+        backgroundImage: "radial-gradient(ellipse at center, #3568b8 0%, #2854a0 50%, #1a3a6c 100%), repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(255,255,255,0.07) 19px, rgba(255,255,255,0.07) 20px), repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(255,255,255,0.07) 19px, rgba(255,255,255,0.07) 20px)",
+        backgroundBlendMode: "normal, overlay, overlay",
       }}
       dangerouslySetInnerHTML={{ __html: svgContent }}
     />
