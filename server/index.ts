@@ -61,7 +61,23 @@ const DOC_LABELS: Record<string, string> = {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const cwd = process.cwd();
+/** Walk up from process.cwd() to find the nearest directory containing .blueprint/ */
+function findProjectRoot(): string {
+  let dir = process.cwd();
+  while (true) {
+    try {
+      const bp = join(dir, BLUEPRINT_DIR);
+      const s = require("fs").statSync(bp);
+      if (s.isDirectory()) return dir;
+    } catch {}
+    const parent = dirname(dir);
+    if (parent === dir) break; // reached filesystem root
+    dir = parent;
+  }
+  return process.cwd(); // fallback
+}
+
+const cwd = findProjectRoot();
 
 function setCors(res: ServerResponse): void {
   res.setHeader("Access-Control-Allow-Origin", "*");
