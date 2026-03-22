@@ -432,18 +432,24 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
 
 /** Simple markdown-to-HTML converter for the print page */
 function markdownToHtml(md: string): string {
-  let html = md;
+  // Extract code blocks FIRST (before HTML escaping corrupts them)
+  const codeBlocks: string[] = [];
+  let html = md.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    const placeholder = `<!--CODEBLOCK_${codeBlocks.length}-->`;
+    if (lang === "mermaid") {
+      codeBlocks.push(`<pre class="mermaid">${code.trim()}</pre>`);
+    } else {
+      const escaped = code.trim().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      codeBlocks.push(`<pre><code>${escaped}</code></pre>`);
+    }
+    return placeholder;
+  });
 
-  // Escape HTML
+  // Now escape HTML in the remaining text
   html = html.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-  // Code blocks (``` ... ```) — must be before inline code
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-    if (lang === "mermaid") {
-      return `<pre class="mermaid">${code.trim()}</pre>`;
-    }
-    return `<pre><code>${code.trim()}</code></pre>`;
-  });
+  // Restore code blocks
+  html = html.replace(/&lt;!--CODEBLOCK_(\d+)--&gt;/g, (_, i) => codeBlocks[parseInt(i)]);
 
   // Tables
   html = html.replace(/^(\|.+\|)\n(\|[\s:|-]+\|)\n((?:\|.+\|\n?)+)/gm, (_, header, sep, body) => {
