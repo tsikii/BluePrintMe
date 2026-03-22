@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Sidebar } from "./components/Sidebar";
 import { DocumentViewer } from "./components/DocumentViewer";
 import { FeedbackModal } from "./components/FeedbackModal";
+import { ExportModal } from "./components/ExportModal";
 
 interface DocEntry {
   name: string;
@@ -67,6 +68,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [feedbackMode, setFeedbackMode] = useState(false);
+  const [exportMode, setExportMode] = useState(false);
 
   const fetchBlueprint = useCallback(async () => {
     try {
@@ -109,14 +111,7 @@ export default function App() {
     : "";
 
   const handleExport = () => {
-    if (!currentDoc) return;
-    const blob = new Blob([currentDoc.content], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${currentDoc.name.replace(/\s+/g, "-").toLowerCase()}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
+    setExportMode(true);
   };
 
   // Loading state
@@ -182,8 +177,7 @@ export default function App() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleExport}
-            disabled={!currentDoc}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-zinc-600 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-zinc-600 hover:bg-zinc-700"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -271,6 +265,17 @@ export default function App() {
         <FeedbackModal
           onClose={() => setFeedbackMode(false)}
           documentName={currentDoc?.name}
+        />
+      )}
+
+      {/* Export Modal */}
+      {exportMode && blueprint && (
+        <ExportModal
+          documents={blueprint.documents}
+          flows={blueprint.flows}
+          projectName={blueprint.meta.projectName}
+          readinessScore={blueprint.readiness.score}
+          onClose={() => setExportMode(false)}
         />
       )}
     </div>
