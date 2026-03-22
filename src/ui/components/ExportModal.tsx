@@ -410,6 +410,13 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
       try {
         const { svg } = await mermaid.render('mermaid-' + i, el.textContent.trim());
         el.innerHTML = svg;
+        // Force white text inside SVG — override any inline styles Mermaid sets
+        const svgEl = el.querySelector('svg');
+        if (svgEl) {
+          const styleEl = document.createElement('style');
+          styleEl.textContent = 'text, tspan, .nodeLabel, .label, .edgeLabel, .cluster-label, foreignObject div, foreignObject span, foreignObject p { fill: #ffffff !important; color: #ffffff !important; }';
+          svgEl.prepend(styleEl);
+        }
         el.classList.add('rendered');
       } catch (e) {
         el.innerHTML = '<div style="padding:1rem;color:#94a3b8;font-style:italic;font-size:0.85rem;">Diagram could not be rendered</div>';
