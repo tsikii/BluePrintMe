@@ -19,6 +19,7 @@ The result: at any moment, the `.blueprint/` folder contains enough information 
 | `database-schema.md` | ERD (Mermaid), table definitions, relationships, migrations |
 | `api-spec.md` | Endpoints, auth, request/response formats, error handling |
 | `flows/*.md` | Sequence diagrams for user journeys, state machines |
+| `testing.md` | Test strategy, frameworks, key test cases, coverage, CI commands |
 | `tech-stack.md` | Languages, frameworks, dependencies, build tools |
 | `deployment.md` | Hosting, CI/CD, environments, infrastructure |
 | `data-models.md` | Core entities, type definitions, validation rules |
@@ -26,6 +27,7 @@ The result: at any moment, the `.blueprint/` folder contains enough information 
 | `environment-config.md` | Env var names (never values), config locations, feature flags |
 | `executive-summary.md` | Three views: Technical, Non-Technical, Top Management |
 | `decisions-log.md` | ADRs, edge case catalog, trade-offs, deprecated approaches |
+| `licensing.md` | Open-source dependencies with license types, sources, and copied code attribution |
 | `changelog.md` | Auto-maintained change log |
 
 All diagrams use **Mermaid** syntax — they render natively in GitHub, VS Code, and the built-in web UI.
