@@ -46,10 +46,9 @@ All diagrams use **Mermaid** syntax — they render natively in GitHub, VS Code,
 
    ```bash
    git clone https://github.com/tsikii/BluePrintMe.git ~/.claude-skills/BluePrintMe
-   cd ~/.claude-skills/BluePrintMe
-   npm install
-   npm run build
    ```
+
+   The web UI comes pre-built — no `npm install` or build step needed.
 
 2. **Add the CLI to your PATH:**
 
