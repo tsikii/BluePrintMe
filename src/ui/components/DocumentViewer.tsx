@@ -3,12 +3,16 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { MermaidRenderer } from "./MermaidRenderer";
 import { ExecutiveSummary } from "./ExecutiveSummary";
+import { SectionAnnotationButton } from "./SectionAnnotationButton";
+import { InlineCommentForm } from "./InlineCommentForm";
+import { useAnnotations } from "./AnnotationContext";
 
 interface Props {
   name: string;
   content: string;
   lastModified: string;
   docType?: string;
+  documentPath?: string;
 }
 
 function formatDate(dateStr: string): string {
@@ -49,9 +53,21 @@ function getFreshness(dateStr: string): "fresh" | "stale" | "old" {
   }
 }
 
-let mermaidBlockCounter = 0;
+/** Extract plain text from React children (handles nested elements). */
+function extractText(children: React.ReactNode): string {
+  if (typeof children === "string") return children;
+  if (typeof children === "number") return String(children);
+  if (Array.isArray(children)) return children.map(extractText).join("");
+  if (React.isValidElement(children) && children.props?.children) {
+    return extractText(children.props.children);
+  }
+  return "";
+}
 
-export function DocumentViewer({ name, content, lastModified, docType }: Props) {
+let mermaidBlockCounter = 0;
+let headingCounter = 0;
+
+export function DocumentViewer({ name, content, lastModified, docType, documentPath }: Props) {
   const freshness = getFreshness(lastModified);
   const freshnessColor = {
     fresh: "bg-green-500",
@@ -65,8 +81,11 @@ export function DocumentViewer({ name, content, lastModified, docType }: Props) 
     old: "May be outdated",
   }[freshness];
 
-  // Reset mermaid counter on each render
+  // Reset counters on each render
   mermaidBlockCounter = 0;
+  headingCounter = 0;
+
+  const docPath = documentPath || "";
 
   // Use the ExecutiveSummary component for executive-summary docs
   const isExecutiveSummary =
@@ -103,6 +122,24 @@ export function DocumentViewer({ name, content, lastModified, docType }: Props) 
     );
   }
 
+  /** Create a heading component with annotation support. */
+  function makeHeading(Tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
+    return function AnnotatedHeading({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
+      const idx = ++headingCounter;
+      const text = extractText(children);
+
+      return (
+        <div className="group">
+          <div className="flex items-center">
+            <Tag {...props}>{children}</Tag>
+            <SectionAnnotationButton heading={text} sectionIndex={idx} />
+          </div>
+          <ActiveCommentForm heading={text} sectionIndex={idx} documentPath={docPath} />
+        </div>
+      );
+    };
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-8 py-6">
       {/* Header */}
@@ -131,6 +168,12 @@ export function DocumentViewer({ name, content, lastModified, docType }: Props) 
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
+            h1: makeHeading("h1"),
+            h2: makeHeading("h2"),
+            h3: makeHeading("h3"),
+            h4: makeHeading("h4"),
+            h5: makeHeading("h5"),
+            h6: makeHeading("h6"),
             code({ className, children, ...props }) {
               const match = /language-(\w+)/.exec(className || "");
               const lang = match ? match[1] : "";
@@ -172,5 +215,26 @@ export function DocumentViewer({ name, content, lastModified, docType }: Props) 
         </ReactMarkdown>
       </div>
     </div>
+  );
+}
+
+/** Renders InlineCommentForm only when this section is active. */
+function ActiveCommentForm({
+  heading,
+  sectionIndex,
+  documentPath,
+}: {
+  heading: string;
+  sectionIndex: number;
+  documentPath: string;
+}) {
+  const { activeSection } = useAnnotations();
+  if (activeSection !== heading) return null;
+  return (
+    <InlineCommentForm
+      heading={heading}
+      sectionIndex={sectionIndex}
+      documentPath={documentPath}
+    />
   );
 }

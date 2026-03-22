@@ -206,6 +206,61 @@ function computeReadiness(docs: BlueprintDocument[]): { score: number; items: Re
 }
 
 // ---------------------------------------------------------------------------
+// Annotation formatting
+// ---------------------------------------------------------------------------
+
+interface AnnotationInput {
+  type: string;
+  sectionHeading: string;
+  selectedText?: string;
+  comment: string;
+}
+
+interface AnnotationPayloadInput {
+  documentName: string;
+  documentPath: string;
+  annotations: AnnotationInput[];
+  globalFeedback?: string;
+}
+
+function formatAnnotationsForClaude(payload: AnnotationPayloadInput): string {
+  const lines: string[] = [];
+  lines.push(`# Blueprint Review Feedback`);
+  lines.push(`Document: ${payload.documentName} (${payload.documentPath})`);
+  lines.push("");
+
+  // Group annotations by section
+  const grouped = new Map<string, AnnotationInput[]>();
+  for (const a of payload.annotations) {
+    const key = a.sectionHeading;
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key)!.push(a);
+  }
+
+  for (const [section, items] of grouped.entries()) {
+    lines.push(`## Section: ${section}`);
+    for (const a of items) {
+      const tag = a.type.toUpperCase();
+      lines.push(`- [${tag}] ${a.comment}`);
+      if (a.selectedText) {
+        lines.push(`  > Selected text: "${a.selectedText}"`);
+      }
+    }
+    lines.push("");
+  }
+
+  if (payload.globalFeedback) {
+    lines.push(`## General Feedback`);
+    lines.push(payload.globalFeedback);
+    lines.push("");
+  }
+
+  lines.push(`Please update the blueprint document at ${payload.documentPath} based on the feedback above. Address each annotation by section.`);
+
+  return lines.join("\n");
+}
+
+// ---------------------------------------------------------------------------
 // Subcommand: review (default)
 // ---------------------------------------------------------------------------
 
@@ -301,8 +356,15 @@ async function cmdReview(): Promise<void> {
     if (req.method === "POST" && pathname === "/api/feedback") {
       try {
         const body = JSON.parse(await readBody(req));
-        const feedback = body.feedback ?? "";
-        resolveFeedback(feedback);
+
+        // Support structured annotation payloads
+        if (body.annotations && Array.isArray(body.annotations)) {
+          const feedback = formatAnnotationsForClaude(body);
+          resolveFeedback(feedback);
+        } else {
+          const feedback = body.feedback ?? "";
+          resolveFeedback(feedback);
+        }
         sendJson(res, { ok: true, message: "Feedback received. Server shutting down." });
       } catch {
         sendJson(res, { error: "Invalid JSON body" }, 400);
