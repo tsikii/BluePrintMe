@@ -9,10 +9,17 @@ interface Props {
 
 type Persona = "technical" | "non-technical" | "top-management";
 
+const PERSONA_ORDER: Persona[] = ["top-management", "technical", "non-technical"];
+
 const PERSONA_CONFIG: Record<
   Persona,
   { label: string; description: string; sectionHeader: string }
 > = {
+  "top-management": {
+    label: "C-Level",
+    description: "For C-suite & board",
+    sectionHeader: "## Top Management",
+  },
   technical: {
     label: "Technical",
     description: "For developers & architects",
@@ -22,11 +29,6 @@ const PERSONA_CONFIG: Record<
     label: "Non-Technical",
     description: "For product & marketing",
     sectionHeader: "## Non-Technical",
-  },
-  "top-management": {
-    label: "Top Management",
-    description: "For C-suite & board",
-    sectionHeader: "## Top Management",
   },
 };
 
@@ -78,7 +80,7 @@ function parsePersonaSections(
 }
 
 export function ExecutiveSummary({ content, lastModified }: Props) {
-  const [activePersona, setActivePersona] = useState<Persona>("technical");
+  const [activePersona, setActivePersona] = useState<Persona>("top-management");
   const sections = useMemo(() => parsePersonaSections(content), [content]);
 
   const hasAnySections =
@@ -99,7 +101,7 @@ export function ExecutiveSummary({ content, lastModified }: Props) {
     <div>
       {/* Persona tabs */}
       <div className="mb-6 flex gap-2">
-        {(Object.keys(PERSONA_CONFIG) as Persona[]).map((persona) => {
+        {PERSONA_ORDER.map((persona) => {
           const config = PERSONA_CONFIG[persona];
           const isActive = activePersona === persona;
           const hasContent = !!sections[persona];
