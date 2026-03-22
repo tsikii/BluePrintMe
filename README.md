@@ -34,17 +34,51 @@ All diagrams use **Mermaid** syntax — they render natively in GitHub, VS Code,
 
 ## Install
 
-```bash
-claude install-skill github:tsikii/BluePrintMe
-```
-
-That's it. The skill adds three slash commands and a post-commit hook to your Claude Code environment.
-
 ### Prerequisites
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
 - [Node.js](https://nodejs.org/) v18+ (for the review server)
 - [tsx](https://github.com/privatenumber/tsx) — installed automatically via `npx`
+
+### Setup
+
+1. **Clone the repo** somewhere on your machine:
+
+   ```bash
+   git clone https://github.com/tsikii/BluePrintMe.git ~/.claude-skills/BluePrintMe
+   cd ~/.claude-skills/BluePrintMe
+   npm install
+   npm run build
+   ```
+
+2. **Add the CLI to your PATH:**
+
+   ```bash
+   mkdir -p ~/.local/bin
+   ln -sf ~/.claude-skills/BluePrintMe/bin/blueprintme ~/.local/bin/blueprintme
+   ```
+
+   Make sure `~/.local/bin` is in your `PATH` (add `export PATH="$HOME/.local/bin:$PATH"` to your shell profile if needed).
+
+3. **Copy the skill files into your project.** From inside any project where you want to use BluePrintMe:
+
+   ```bash
+   # Slash commands
+   mkdir -p .claude/commands
+   cp ~/.claude-skills/BluePrintMe/commands/*.md .claude/commands/
+
+   # Hooks (optional — enables post-commit sync detection)
+   cp ~/.claude-skills/BluePrintMe/hooks/hooks.json .claude/settings.local.json
+   ```
+
+   Or, to install the commands globally (available in all projects):
+
+   ```bash
+   mkdir -p ~/.claude/commands
+   cp ~/.claude-skills/BluePrintMe/commands/*.md ~/.claude/commands/
+   ```
+
+That's it. The next time you start Claude Code, `/blueprint`, `/blueprint-review`, and `/blueprint-sync` will be available.
 
 ---
 
