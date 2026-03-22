@@ -22,35 +22,35 @@ const HTML_PATH = join(__dirname, "..", "dist", "index.html");
 
 // Expected top-level blueprint documents for readiness scoring
 const EXPECTED_DOCUMENTS = [
-  "README.md",
+  "executive-summary.md",
   "prd.md",
+  "decisions-log.md",
   "system-architecture.md",
+  "data-models.md",
   "database-schema.md",
   "api-spec.md",
   "tech-stack.md",
   "deployment.md",
-  "data-models.md",
-  "third-party-integrations.md",
   "environment-config.md",
-  "executive-summary.md",
-  "decisions-log.md",
+  "third-party-integrations.md",
   "changelog.md",
+  "README.md",
 ];
 
 const DOC_LABELS: Record<string, string> = {
-  "README.md": "README",
+  "executive-summary.md": "Executive Summary",
   "prd.md": "PRD",
+  "decisions-log.md": "Decisions Log",
   "system-architecture.md": "System Architecture",
+  "data-models.md": "Data Models",
   "database-schema.md": "Database Schema",
   "api-spec.md": "API Spec",
   "tech-stack.md": "Tech Stack",
   "deployment.md": "Deployment",
-  "data-models.md": "Data Models",
-  "third-party-integrations.md": "Integrations",
   "environment-config.md": "Configuration",
-  "executive-summary.md": "Executive Summary",
-  "decisions-log.md": "Decisions Log",
+  "third-party-integrations.md": "Integrations",
   "changelog.md": "Changelog",
+  "README.md": "README",
 };
 
 // ---------------------------------------------------------------------------
@@ -142,7 +142,14 @@ async function loadBlueprintDocuments(): Promise<BlueprintDocument[]> {
     });
   }
 
-  docs.sort((a, b) => a.name.localeCompare(b.name));
+  // Sort by priority order defined in EXPECTED_DOCUMENTS
+  const priority = new Map(EXPECTED_DOCUMENTS.map((name, i) => [name, i]));
+  docs.sort((a, b) => {
+    const fileName = (d: BlueprintDocument) => d.path.split("/").pop() || "";
+    const pa = priority.get(fileName(a)) ?? 999;
+    const pb = priority.get(fileName(b)) ?? 999;
+    return pa !== pb ? pa - pb : a.name.localeCompare(b.name);
+  });
   return docs;
 }
 
