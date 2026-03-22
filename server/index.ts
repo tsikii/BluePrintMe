@@ -374,18 +374,14 @@ async function cmdPostCommit(): Promise<void> {
     process.exit(0);
   }
 
-  const markerPath = join(cwd, NEEDS_SYNC_FILE);
   const blueprintDir = join(cwd, BLUEPRINT_DIR);
 
   if (!(await fileExists(blueprintDir))) {
     process.exit(0);
   }
 
-  await writeFile(
-    markerPath,
-    JSON.stringify({ timestamp: new Date().toISOString(), command }),
-    "utf-8"
-  );
+  // Output instruction to stdout — Claude Code reads this and acts on it
+  console.log(`A commit was just made. Review the changes in this commit and update any affected .blueprint/ documents to keep them in sync with the code. Focus on files that changed in this commit — check git diff HEAD~1 to see what changed. Update only the blueprint documents that are affected by the changes. Remember to update .blueprint/licensing.md if any new dependencies or copied code were added.`);
 
   process.exit(0);
 }

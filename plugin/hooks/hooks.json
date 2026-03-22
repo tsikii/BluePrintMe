@@ -7,7 +7,7 @@
           {
             "type": "command",
             "command": "blueprintme post-commit",
-            "timeout": 60
+            "timeout": 10
           }
         ]
       }
