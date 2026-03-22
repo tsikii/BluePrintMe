@@ -226,7 +226,7 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
       font-family: 'SF Mono', Monaco, monospace;
       color: #4338ca;
     }
-    .doc-content pre {
+    .doc-content pre:not(.mermaid) {
       background: #1e1b4b;
       color: #e2e8f0;
       padding: 1rem 1.25rem;
@@ -236,7 +236,7 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
       font-size: 0.85rem;
       line-height: 1.5;
     }
-    .doc-content pre code {
+    .doc-content pre:not(.mermaid) code {
       background: none;
       color: inherit;
       padding: 0;
@@ -354,9 +354,43 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
 
   <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-    mermaid.initialize({ startOnLoad: false, theme: 'default' });
-    await mermaid.run({ querySelector: '.mermaid' });
-    // Save as PDF via print dialog
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'base',
+      securityLevel: 'loose',
+      themeVariables: {
+        primaryColor: '#eef2ff',
+        primaryTextColor: '#1e1b4b',
+        primaryBorderColor: '#6366f1',
+        lineColor: '#6366f1',
+        secondaryColor: '#f0fdf4',
+        tertiaryColor: '#fefce8',
+        background: '#ffffff',
+        mainBkg: '#eef2ff',
+        nodeBorder: '#6366f1',
+        clusterBkg: '#f8fafc',
+        titleColor: '#1e1b4b',
+        edgeLabelBackground: '#ffffff',
+        actorBkg: '#eef2ff',
+        actorBorder: '#6366f1',
+        actorTextColor: '#1e1b4b',
+        signalColor: '#1e1b4b',
+        signalTextColor: '#1e1b4b',
+      },
+    });
+    // Render each diagram individually so one failure doesn't block the rest
+    const diagrams = document.querySelectorAll('.mermaid');
+    for (let i = 0; i < diagrams.length; i++) {
+      const el = diagrams[i];
+      try {
+        const { svg } = await mermaid.render('mermaid-' + i, el.textContent.trim());
+        el.innerHTML = svg;
+        el.classList.add('rendered');
+      } catch (e) {
+        el.innerHTML = '<div style="padding:1rem;color:#94a3b8;font-style:italic;font-size:0.85rem;">Diagram could not be rendered</div>';
+        el.classList.add('render-error');
+      }
+    }
     setTimeout(() => window.print(), 300);
   </script>
 </body>
@@ -434,7 +468,7 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
 function markdownToHtml(md: string): string {
   // Extract code blocks FIRST (before HTML escaping corrupts them)
   const codeBlocks: string[] = [];
-  let html = md.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+  let html = md.replace(/```\s*(\w*)\s*\n([\s\S]*?)```/g, (_, lang, code) => {
     const placeholder = `<!--CODEBLOCK_${codeBlocks.length}-->`;
     if (lang === "mermaid") {
       codeBlocks.push(`<pre class="mermaid">${code.trim()}</pre>`);
