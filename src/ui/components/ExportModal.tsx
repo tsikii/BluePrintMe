@@ -285,10 +285,10 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
       height: auto;
     }
 
-    /* Mermaid diagrams */
+    /* Mermaid diagrams — blueprint style */
     .mermaid {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
+      background: #0a2540;
+      border: 1px solid #2a6496;
       border-radius: 8px;
       padding: 1.5rem;
       margin: 1rem 0;
@@ -359,23 +359,35 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
       theme: 'base',
       securityLevel: 'loose',
       themeVariables: {
-        primaryColor: '#eef2ff',
-        primaryTextColor: '#1e1b4b',
-        primaryBorderColor: '#6366f1',
-        lineColor: '#6366f1',
-        secondaryColor: '#f0fdf4',
-        tertiaryColor: '#fefce8',
-        background: '#ffffff',
-        mainBkg: '#eef2ff',
-        nodeBorder: '#6366f1',
-        clusterBkg: '#f8fafc',
-        titleColor: '#1e1b4b',
-        edgeLabelBackground: '#ffffff',
-        actorBkg: '#eef2ff',
-        actorBorder: '#6366f1',
-        actorTextColor: '#1e1b4b',
-        signalColor: '#1e1b4b',
-        signalTextColor: '#1e1b4b',
+        primaryColor: '#1a3a5c',
+        primaryTextColor: '#d4e4f7',
+        primaryBorderColor: '#4a9eff',
+        lineColor: '#4a9eff',
+        secondaryColor: '#1e4470',
+        tertiaryColor: '#0f2a44',
+        background: '#0a2540',
+        mainBkg: '#1a3a5c',
+        nodeBorder: '#4a9eff',
+        clusterBkg: '#0f2a44',
+        clusterBorder: '#2a6496',
+        titleColor: '#d4e4f7',
+        edgeLabelBackground: '#0a2540',
+        actorBkg: '#1a3a5c',
+        actorBorder: '#4a9eff',
+        actorTextColor: '#d4e4f7',
+        actorLineColor: '#4a9eff',
+        signalColor: '#4a9eff',
+        signalTextColor: '#d4e4f7',
+        noteBkgColor: '#1e4470',
+        noteBorderColor: '#4a9eff',
+        noteTextColor: '#d4e4f7',
+        labelBoxBkgColor: '#1a3a5c',
+        labelBoxBorderColor: '#4a9eff',
+        labelTextColor: '#d4e4f7',
+        loopTextColor: '#d4e4f7',
+        relationColor: '#4a9eff',
+        relationLabelBackground: '#0a2540',
+        relationLabelColor: '#d4e4f7',
       },
     });
     // Render each diagram individually so one failure doesn't block the rest
