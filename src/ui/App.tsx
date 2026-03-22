@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Sidebar } from "./components/Sidebar";
 import { DocumentViewer } from "./components/DocumentViewer";
-import { FeedbackModal } from "./components/FeedbackModal";
 import { ExportModal } from "./components/ExportModal";
 import { AnnotationProvider, useAnnotations } from "./components/AnnotationContext";
 import { AnnotationPanel } from "./components/AnnotationPanel";
@@ -77,7 +76,6 @@ function AppInner() {
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [feedbackMode, setFeedbackMode] = useState(false);
   const [exportMode, setExportMode] = useState(false);
 
   const { annotationMode, setAnnotationMode, annotations } = useAnnotations();
@@ -227,15 +225,6 @@ function AppInner() {
             </svg>
             Export
           </button>
-          <button
-            onClick={() => setFeedbackMode(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-500"
-          >
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            Send Feedback
-          </button>
         </div>
       </header>
 
@@ -315,14 +304,6 @@ function AppInner() {
           </span>
         </div>
       </footer>
-
-      {/* Feedback Modal */}
-      {feedbackMode && (
-        <FeedbackModal
-          onClose={() => setFeedbackMode(false)}
-          documentName={currentDoc?.name}
-        />
-      )}
 
       {/* Export Modal */}
       {exportMode && blueprint && (
