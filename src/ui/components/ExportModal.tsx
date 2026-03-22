@@ -285,17 +285,19 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
       height: auto;
     }
 
-    /* Mermaid placeholder */
-    .mermaid-block {
+    /* Mermaid diagrams */
+    .mermaid {
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
-      padding: 1rem;
+      padding: 1.5rem;
       margin: 1rem 0;
       text-align: center;
-      color: #64748b;
-      font-style: italic;
-      font-size: 0.85rem;
+      overflow-x: auto;
+    }
+    .mermaid svg {
+      max-width: 100%;
+      height: auto;
     }
 
     /* Print optimizations */
@@ -350,11 +352,12 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
   <!-- Documents -->
   ${docSections}
 
-  <script>
-    // Auto-trigger print dialog
-    window.onload = () => {
-      setTimeout(() => window.print(), 500);
-    };
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: false, theme: 'default' });
+    await mermaid.run({ querySelector: '.mermaid' });
+    // Save as PDF via print dialog
+    setTimeout(() => window.print(), 300);
   </script>
 </body>
 </html>`;
@@ -390,9 +393,9 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
               </svg>
             </div>
             <div>
-              <div className="text-sm font-medium text-zinc-100">Export as PDF</div>
+              <div className="text-sm font-medium text-zinc-100">Download as PDF</div>
               <div className="text-xs text-zinc-400">
-                All documents in a styled, print-ready package
+                All documents with diagrams in a styled package — choose "Save as PDF" in the dialog
               </div>
             </div>
           </button>
@@ -437,7 +440,7 @@ function markdownToHtml(md: string): string {
   // Code blocks (``` ... ```) — must be before inline code
   html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
     if (lang === "mermaid") {
-      return `<div class="mermaid-block">[Mermaid Diagram — view in BluePrintMe UI]</div>`;
+      return `<pre class="mermaid">${code.trim()}</pre>`;
     }
     return `<pre><code>${code.trim()}</code></pre>`;
   });
