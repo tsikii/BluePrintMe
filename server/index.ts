@@ -271,7 +271,12 @@ function formatAnnotationsForClaude(payload: AnnotationPayloadInput): string {
     lines.push("");
   }
 
-  lines.push(`Please update the blueprint document at ${payload.documentPath} based on the feedback above. Address each annotation by section.`);
+  lines.push(`## Instructions`);
+  lines.push(`1. Update the blueprint document at ${payload.documentPath} based on the feedback above. Address each annotation by section.`);
+  lines.push(`2. For [NEEDS_UPDATE] annotations, revise the relevant section to reflect the current state of the code.`);
+  lines.push(`3. For [DELETION] annotations, remove the indicated section or content.`);
+  lines.push(`4. For [COMMENT] annotations, incorporate the feedback as appropriate.`);
+  lines.push(`5. After making all changes, ask the user if they would like to run /blueprint-review again to verify the updates.`);
 
   return lines.join("\n");
 }
