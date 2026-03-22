@@ -287,8 +287,11 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
 
     /* Mermaid diagrams — blueprint style */
     .mermaid {
-      background: #0a2540;
-      border: 1px solid #2a6496;
+      background:
+        repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(255,255,255,0.08) 19px, rgba(255,255,255,0.08) 20px),
+        repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(255,255,255,0.08) 19px, rgba(255,255,255,0.08) 20px),
+        #2854a0;
+      border: 1px solid rgba(255,255,255,0.3);
       border-radius: 8px;
       padding: 1.5rem;
       margin: 1rem 0;
@@ -359,35 +362,35 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
       theme: 'base',
       securityLevel: 'loose',
       themeVariables: {
-        primaryColor: '#1a3a5c',
-        primaryTextColor: '#d4e4f7',
-        primaryBorderColor: '#4a9eff',
-        lineColor: '#4a9eff',
-        secondaryColor: '#1e4470',
-        tertiaryColor: '#0f2a44',
-        background: '#0a2540',
-        mainBkg: '#1a3a5c',
-        nodeBorder: '#4a9eff',
-        clusterBkg: '#0f2a44',
-        clusterBorder: '#2a6496',
-        titleColor: '#d4e4f7',
-        edgeLabelBackground: '#0a2540',
-        actorBkg: '#1a3a5c',
-        actorBorder: '#4a9eff',
-        actorTextColor: '#d4e4f7',
-        actorLineColor: '#4a9eff',
-        signalColor: '#4a9eff',
-        signalTextColor: '#d4e4f7',
-        noteBkgColor: '#1e4470',
-        noteBorderColor: '#4a9eff',
-        noteTextColor: '#d4e4f7',
-        labelBoxBkgColor: '#1a3a5c',
-        labelBoxBorderColor: '#4a9eff',
-        labelTextColor: '#d4e4f7',
-        loopTextColor: '#d4e4f7',
-        relationColor: '#4a9eff',
-        relationLabelBackground: '#0a2540',
-        relationLabelColor: '#d4e4f7',
+        primaryColor: '#2854a0',
+        primaryTextColor: '#ffffff',
+        primaryBorderColor: '#ffffff',
+        lineColor: '#ffffff',
+        secondaryColor: '#1e4480',
+        tertiaryColor: '#1a3a6c',
+        background: '#2854a0',
+        mainBkg: '#2854a0',
+        nodeBorder: '#ffffff',
+        clusterBkg: '#1e4480',
+        clusterBorder: '#ffffff',
+        titleColor: '#ffffff',
+        edgeLabelBackground: '#2854a0',
+        actorBkg: '#2854a0',
+        actorBorder: '#ffffff',
+        actorTextColor: '#ffffff',
+        actorLineColor: '#ffffff',
+        signalColor: '#ffffff',
+        signalTextColor: '#ffffff',
+        noteBkgColor: '#1e4480',
+        noteBorderColor: '#ffffff',
+        noteTextColor: '#ffffff',
+        labelBoxBkgColor: '#2854a0',
+        labelBoxBorderColor: '#ffffff',
+        labelTextColor: '#ffffff',
+        loopTextColor: '#ffffff',
+        relationColor: '#ffffff',
+        relationLabelBackground: '#2854a0',
+        relationLabelColor: '#ffffff',
       },
     });
     // Render each diagram individually so one failure doesn't block the rest
