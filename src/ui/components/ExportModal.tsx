@@ -303,6 +303,15 @@ export function ExportModal({ documents, flows, projectName, readinessScore, onC
       max-width: 100%;
       height: auto;
     }
+    .mermaid svg text,
+    .mermaid svg .nodeLabel,
+    .mermaid svg .label,
+    .mermaid svg .edgeLabel,
+    .mermaid svg .cluster-label,
+    .mermaid svg tspan {
+      fill: #ffffff !important;
+      color: #ffffff !important;
+    }
 
     /* Print optimizations */
     @media print {
