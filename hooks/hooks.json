@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "blueprintme post-commit",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

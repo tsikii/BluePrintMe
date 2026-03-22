@@ -1,0 +1,10 @@
+{
+  "name": "blueprintme",
+  "description": "Living Product IP: Automatically maintains PRD, system architecture, database schema, API specs, flows, and more — always in sync with your code. Enough to rebuild from scratch.",
+  "version": "0.1.0",
+  "author": {
+    "name": "blueprintme"
+  },
+  "repository": "",
+  "keywords": ["documentation", "blueprint", "prd", "architecture", "product-ip", "rebuild"]
+}

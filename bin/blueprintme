@@ -1,0 +1,22 @@
+#!/bin/bash
+# BluePrintMe CLI wrapper
+# Resolves symlinks to find the actual script directory, then runs the server
+
+# Follow symlinks to find the real script location
+SOURCE="$0"
+while [ -L "$SOURCE" ]; do
+  DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ "$SOURCE" != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
+SERVER_SCRIPT="$SCRIPT_DIR/../server/index.ts"
+
+# Add node to PATH (nvm or common locations)
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && nvm use v24 > /dev/null 2>&1
+
+# Fallback: add common node locations to PATH
+export PATH="$HOME/.nvm/versions/node/v24.14.0/bin:$HOME/.local/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"
+
+exec npx tsx "$SERVER_SCRIPT" "$@"
