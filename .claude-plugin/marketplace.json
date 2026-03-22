@@ -1,0 +1,13 @@
+{
+  "name": "BluePrintMe",
+  "owner": {
+    "name": "tsikii"
+  },
+  "plugins": [
+    {
+      "name": "blueprintme",
+      "source": ".",
+      "description": "Living Product IP: Automatically maintains PRD, system architecture, database schema, API specs, flows, and more — always in sync with your code."
+    }
+  ]
+}
