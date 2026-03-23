@@ -1,6 +1,6 @@
 ---
 description: Generate or update the .blueprint/ product IP folder
-allowed-tools: Bash(blueprintme:*), Read, Write, Edit, Glob, Grep
+allowed-tools: Bash(blueprintme:*), Bash(git log:*), Bash(git diff:*), Read, Write, Edit, Glob, Grep
 ---
 
 ## Blueprint Generation
@@ -41,6 +41,7 @@ Scan the codebase and create/update the following files in `.blueprint/`:
 9. Find test files (*.test.*, *.spec.*, __tests__/, tests/) and document test strategy, frameworks, key test cases, and how to run them
 10. Extract license information from package.json, lock files, LICENSE files, and dependency manifests — document every dependency's license type and source
 11. Cross-reference code findings with spec documents — flag any discrepancies where the code doesn't match the spec (missing features, unimplemented requirements, divergent behavior)
+12. **Mine git history for the decisions log.** If the project is a git repo, run `git log --oneline --since="1 year ago"` (or all history if shorter) and scan commit messages for significant architectural or technical decisions — look for keywords like "migrate", "switch", "replace", "remove", "add", "refactor", "upgrade", "rewrite", "deprecate", "rename". Also run `git log --diff-filter=D --summary` to find deleted files (indicates abandoned approaches). Run `git log --all --oneline -- package.json` (or equivalent dependency file) to find dependency changes. Summarize these as dated entries in `.blueprint/decisions-log.md` with the format: `### YYYY-MM — Decision title` followed by what changed and why (infer "why" from commit context). Group by theme (architecture, dependencies, data model, etc.).
 
 ### Rules
 
