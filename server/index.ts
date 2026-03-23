@@ -616,7 +616,16 @@ async function cmdPostCommit(): Promise<void> {
   }
 
   // Output instruction to stdout — Claude Code reads this and acts on it
-  console.log(`A commit was just made. Review the changes in this commit and update any affected .blueprint/ documents to keep them in sync with the code. Focus on files that changed in this commit — check git diff HEAD~1 to see what changed. Update only the blueprint documents that are affected by the changes. Remember to update .blueprint/licensing.md if any new dependencies or copied code were added.`);
+  console.log(`A commit was just made. Do the following:
+
+1. Run \`git log -1 --format="%s%n%n%b"\` to read the commit message.
+2. Run \`git diff HEAD~1 --stat\` to see what files changed.
+3. Update any affected .blueprint/ documents to keep them in sync with the code.
+4. Check if the commit message contains words like: migrate, switch, replace, remove, refactor, upgrade, rewrite, deprecate, rename, redesign, overhaul, drop, adopt, introduce, convert. If it does, this is a significant decision — append a new entry to .blueprint/decisions-log.md with the format:
+   ### YYYY-MM — [Short decision title derived from the commit]
+   [What changed and why, based on the commit message and diff]
+5. If new dependencies were added or code was copied from external sources, update .blueprint/licensing.md.
+6. Only update blueprint documents that are actually affected — do not regenerate everything.`);
 
   process.exit(0);
 }
