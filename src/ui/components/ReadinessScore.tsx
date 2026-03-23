@@ -12,6 +12,13 @@ interface Props {
   items: ReadinessItem[];
 }
 
+const STATUS_ORDER: Record<string, number> = {
+  missing: 0,
+  partial: 1,
+  stale: 2,
+  complete: 3,
+};
+
 export function ReadinessScore({ score, items }: Props) {
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
@@ -25,29 +32,36 @@ export function ReadinessScore({ score, items }: Props) {
         ? { stroke: "#eab308", text: "text-yellow-400", bg: "text-yellow-500" }
         : { stroke: "#ef4444", text: "text-red-400", bg: "text-red-500" };
 
+  // Sort: issues first, complete last
+  const sorted = [...items].sort(
+    (a, b) => (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3)
+  );
+
+  const issueCount = items.filter((i) => i.status !== "complete").length;
+
   const statusIcon = (status: ReadinessItem["status"]) => {
     switch (status) {
       case "complete":
         return (
-          <svg className="h-3.5 w-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="h-3.5 w-3.5 flex-shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         );
       case "partial":
         return (
-          <svg className="h-3.5 w-3.5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="h-3.5 w-3.5 flex-shrink-0 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01" />
           </svg>
         );
       case "stale":
         return (
-          <svg className="h-3.5 w-3.5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="h-3.5 w-3.5 flex-shrink-0 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         );
       case "missing":
         return (
-          <svg className="h-3.5 w-3.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="h-3.5 w-3.5 flex-shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         );
@@ -59,16 +73,7 @@ export function ReadinessScore({ score, items }: Props) {
       <div className="mb-3 flex items-center gap-3">
         <div className="relative flex-shrink-0">
           <svg width="96" height="96" viewBox="0 0 96 96" className="mx-auto block">
-            {/* Background circle */}
-            <circle
-              cx="48"
-              cy="48"
-              r={radius}
-              fill="none"
-              stroke="#27272a"
-              strokeWidth="6"
-            />
-            {/* Progress circle */}
+            <circle cx="48" cy="48" r={radius} fill="none" stroke="#27272a" strokeWidth="6" />
             <circle
               cx="48"
               cy="48"
@@ -82,52 +87,55 @@ export function ReadinessScore({ score, items }: Props) {
               transform="rotate(-90 48 48)"
               className="transition-all duration-700 ease-out"
             />
-            {/* Score text */}
-            <text
-              x="48"
-              y="44"
-              textAnchor="middle"
-              className={`text-xl font-bold ${scoreColor.text}`}
-              fill="currentColor"
-              style={{ fontSize: "1.25rem", fontWeight: 700 }}
-            >
+            <text x="48" y="44" textAnchor="middle" className={`text-xl font-bold ${scoreColor.text}`} fill="currentColor" style={{ fontSize: "1.25rem", fontWeight: 700 }}>
               {score}%
             </text>
-            <text
-              x="48"
-              y="60"
-              textAnchor="middle"
-              fill="#71717a"
-              style={{ fontSize: "0.55rem" }}
-            >
+            <text x="48" y="60" textAnchor="middle" fill="#71717a" style={{ fontSize: "0.55rem" }}>
               Readiness
             </text>
           </svg>
         </div>
       </div>
 
+      {issueCount > 0 && (
+        <div className="mb-2 rounded-md bg-yellow-900/20 px-2.5 py-1.5 text-[10px] text-yellow-400">
+          {issueCount} section{issueCount !== 1 ? "s" : ""} need{issueCount === 1 ? "s" : ""} attention
+        </div>
+      )}
+
       {/* Status list */}
-      <div className="space-y-1 max-h-40 overflow-y-auto">
-        {items.map((item) => (
+      <div className="space-y-0.5 max-h-52 overflow-y-auto">
+        {sorted.map((item) => (
           <div
             key={item.docType}
-            className="flex items-center gap-2 rounded px-2 py-1 text-xs"
+            className={`rounded px-2 py-1.5 text-xs ${
+              item.status !== "complete" ? "bg-zinc-800/50" : ""
+            }`}
           >
-            {statusIcon(item.status)}
-            <span className="flex-1 truncate text-zinc-400">{item.label}</span>
-            <span
-              className={`text-[10px] font-medium uppercase tracking-wide ${
-                item.status === "complete"
-                  ? "text-green-600"
-                  : item.status === "partial"
-                    ? "text-yellow-600"
-                    : item.status === "stale"
-                      ? "text-orange-600"
-                      : "text-red-600"
-              }`}
-            >
-              {item.status}
-            </span>
+            <div className="flex items-center gap-2">
+              {statusIcon(item.status)}
+              <span className={`flex-1 truncate ${item.status !== "complete" ? "text-zinc-200" : "text-zinc-400"}`}>
+                {item.label}
+              </span>
+              <span
+                className={`text-[10px] font-medium uppercase tracking-wide ${
+                  item.status === "complete"
+                    ? "text-green-600"
+                    : item.status === "partial"
+                      ? "text-yellow-600"
+                      : item.status === "stale"
+                        ? "text-orange-600"
+                        : "text-red-600"
+                }`}
+              >
+                {item.status}
+              </span>
+            </div>
+            {item.detail && (
+              <p className="mt-0.5 ml-5.5 pl-0.5 text-[10px] leading-tight text-zinc-500">
+                {item.detail}
+              </p>
+            )}
           </div>
         ))}
       </div>
