@@ -30,15 +30,17 @@ Scan the codebase and create/update the following files in `.blueprint/`:
 
 ### How to analyze
 
-1. Read the project's package.json / requirements.txt / Cargo.toml / go.mod etc.
-2. Scan the file tree structure using Glob
-3. Read key source files to understand architecture
-4. Identify database schemas (Prisma, migrations, models, SQL files)
-5. Find API route definitions
-6. Detect frameworks and patterns
-7. Search for environment variable usage
-8. Find test files (*.test.*, *.spec.*, __tests__/, tests/) and document test strategy, frameworks, key test cases, and how to run them
-9. Extract license information from package.json, lock files, LICENSE files, and dependency manifests — document every dependency's license type and source
+1. **Check for spec documents first.** Look for files like `spec.md`, `SPEC.md`, `specification.md`, `product-spec.md`, `requirements.md`, `PRD.md`, `brief.md`, `overview.md`, or any markdown file in a `docs/`, `spec/`, or `specs/` folder that describes the product vision, requirements, or features. If found, read them and use them as the authoritative baseline — they take priority over inferences from code. Use spec content to populate `.blueprint/prd.md` (features, acceptance criteria, user personas, product goals) and to inform all other blueprint documents (architecture decisions, data models, API design, flows).
+2. Read the project's package.json / requirements.txt / Cargo.toml / go.mod etc.
+3. Scan the file tree structure using Glob
+4. Read key source files to understand architecture
+5. Identify database schemas (Prisma, migrations, models, SQL files)
+6. Find API route definitions
+7. Detect frameworks and patterns
+8. Search for environment variable usage
+9. Find test files (*.test.*, *.spec.*, __tests__/, tests/) and document test strategy, frameworks, key test cases, and how to run them
+10. Extract license information from package.json, lock files, LICENSE files, and dependency manifests — document every dependency's license type and source
+11. Cross-reference code findings with spec documents — flag any discrepancies where the code doesn't match the spec (missing features, unimplemented requirements, divergent behavior)
 
 ### Rules
 
