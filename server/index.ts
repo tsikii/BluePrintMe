@@ -340,26 +340,34 @@ function computeReadiness(docs: BlueprintDocument[]): { score: number; items: Re
 
     totalWeightedScore += finalScore * weight;
 
+    const pct = Math.round(finalScore * 100);
+
     if (words < minWords) {
-      items.push({ docType, label, status: "partial", detail: `Thin content (${words} words, need ~${minWords})` });
+      items.push({ docType, label, status: "partial", detail: `${pct}% — Thin content (${words} words, need ~${minWords})` });
     } else if (daysSince > 14) {
-      items.push({ docType, label, status: "stale", detail: `Last updated ${Math.floor(daysSince)}d ago` });
+      items.push({ docType, label, status: "stale", detail: `${pct}% — Last updated ${Math.floor(daysSince)}d ago` });
     } else if (depthScore < 0.5) {
-      items.push({ docType, label, status: "partial", detail: "Lacks depth — missing structure, diagrams, or specifics" });
+      items.push({ docType, label, status: "partial", detail: `${pct}% — Lacks depth — missing structure, diagrams, or specifics` });
+    } else if (depthScore < 0.8) {
+      items.push({ docType, label, status: "partial", detail: `${pct}% — Could use more detail (headings, diagrams, code examples, or specifics)` });
     } else {
-      items.push({ docType, label, status: "complete" });
+      items.push({ docType, label, status: "complete", detail: `${pct}%` });
     }
   }
 
-  // Check for flows — bonus
+  // Check for flows — visible item
   const flowDocs = docs.filter((d) => d.path.includes("/flows/"));
+  totalWeight += 5;
   if (flowDocs.length === 0) {
-    totalWeight += 5;
-    // No bonus added — missing flows costs 5 points
+    items.push({ docType: "flows", label: "User Flows", status: "missing", detail: "No flow diagrams found in flows/" });
   } else {
-    totalWeight += 5;
-    const flowScore = Math.min(flowDocs.length / 3, 1); // 3+ flows = full marks
+    const flowScore = Math.min(flowDocs.length / 3, 1);
     totalWeightedScore += flowScore * 5;
+    if (flowDocs.length < 3) {
+      items.push({ docType: "flows", label: "User Flows", status: "partial", detail: `${Math.round(flowScore * 100)}% — ${flowDocs.length} flow${flowDocs.length !== 1 ? "s" : ""}, recommend 3+` });
+    } else {
+      items.push({ docType: "flows", label: "User Flows", status: "complete", detail: `${flowDocs.length} flows` });
+    }
   }
 
   const score = totalWeight > 0 ? Math.round((totalWeightedScore / totalWeight) * 100) : 0;
