@@ -598,12 +598,49 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       color: #ffffff !important;
     }
 
+    /* Download button */
+    .download-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 2rem;
+      background: #1e1b4b;
+      color: white;
+      font-size: 0.875rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .download-bar span {
+      opacity: 0.7;
+      font-size: 0.8rem;
+    }
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #6366f1;
+      color: white;
+      border: none;
+      padding: 0.5rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .download-btn:hover { background: #4f46e5; }
+
     /* Print optimizations */
     @media print {
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       .cover { height: 100vh; }
       .doc-section { page-break-before: always; }
       .no-break { page-break-inside: avoid; }
+      .download-bar { display: none !important; }
     }
 
     /* Footer */
@@ -622,8 +659,17 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   </style>
 </head>
 <body>
+  \x3C!-- Download Bar -->
+  <div class="download-bar">
+    <span>${r} — Product Blueprint</span>
+    <button class="download-btn" onclick="window.print()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download PDF
+    </button>
+  </div>
+
   \x3C!-- Cover Page -->
-  <div class="cover">
+  <div class="cover" style="margin-top: 52px;">
     <div class="cover-icon">&#x1F3D7;</div>
     <h1>${r}</h1>
     <div class="subtitle">Product Blueprint</div>
