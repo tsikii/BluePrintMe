@@ -373,6 +373,13 @@ async function cmdReview(): Promise<void> {
       return;
     }
 
+    // POST /api/done — user is done reviewing, close server
+    if (req.method === "POST" && pathname === "/api/done") {
+      resolveFeedback("");
+      sendJson(res, { ok: true, message: "Review complete. Server shutting down." });
+      return;
+    }
+
     // POST /api/feedback — user submits feedback
     if (req.method === "POST" && pathname === "/api/feedback") {
       try {
