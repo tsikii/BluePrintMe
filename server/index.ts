@@ -190,35 +190,180 @@ interface ReadinessItem {
   detail?: string;
 }
 
+/** Minimum word counts for a document to be considered substantive enough to rebuild from. */
+const DOC_MIN_WORDS: Record<string, number> = {
+  "executive-summary.md": 100,
+  "prd.md": 200,
+  "decisions-log.md": 50,
+  "system-architecture.md": 150,
+  "data-models.md": 100,
+  "database-schema.md": 80,
+  "api-spec.md": 100,
+  "testing.md": 80,
+  "tech-stack.md": 50,
+  "deployment.md": 60,
+  "environment-config.md": 30,
+  "third-party-integrations.md": 30,
+  "licensing.md": 20,
+  "changelog.md": 20,
+  "README.md": 30,
+};
+
+/** Weight of each document toward rebuild capability (total = 100). */
+const DOC_WEIGHTS: Record<string, number> = {
+  "prd.md": 12,
+  "system-architecture.md": 15,
+  "data-models.md": 12,
+  "database-schema.md": 10,
+  "api-spec.md": 12,
+  "tech-stack.md": 8,
+  "testing.md": 6,
+  "deployment.md": 5,
+  "environment-config.md": 4,
+  "third-party-integrations.md": 4,
+  "executive-summary.md": 3,
+  "decisions-log.md": 3,
+  "licensing.md": 2,
+  "changelog.md": 2,
+  "README.md": 2,
+};
+
+/** Check if a document has key structural indicators. */
+function scoreDocumentDepth(fileName: string, content: string): number {
+  // Returns 0-1 representing how thorough the document is
+  const words = content.split(/\s+/).length;
+  const minWords = DOC_MIN_WORDS[fileName] || 50;
+  const lines = content.split("\n").length;
+  const headings = (content.match(/^#{1,4}\s/gm) || []).length;
+  const codeBlocks = (content.match(/```/g) || []).length / 2;
+  const mermaidDiagrams = (content.match(/```mermaid/g) || []).length;
+  const tables = (content.match(/^\|/gm) || []).length;
+  const bulletPoints = (content.match(/^[\s]*[-*]\s/gm) || []).length;
+
+  let score = 0;
+
+  // Word count — scales up to 0.4
+  const wordRatio = Math.min(words / (minWords * 3), 1);
+  score += wordRatio * 0.4;
+
+  // Structure — headings indicate organized content (up to 0.2)
+  const headingScore = Math.min(headings / 5, 1);
+  score += headingScore * 0.2;
+
+  // Technical depth — code blocks, diagrams, tables (up to 0.25)
+  let techSignals = 0;
+  if (codeBlocks > 0) techSignals += 0.3;
+  if (mermaidDiagrams > 0) techSignals += 0.3;
+  if (tables > 2) techSignals += 0.2;
+  if (bulletPoints > 5) techSignals += 0.2;
+  score += Math.min(techSignals, 1) * 0.25;
+
+  // Specificity checks per doc type (up to 0.15)
+  let specificity = 0;
+  const lower = content.toLowerCase();
+  switch (fileName) {
+    case "prd.md":
+      if (lower.includes("acceptance criteria") || lower.includes("user stor")) specificity += 0.5;
+      if (lower.includes("feature") && lower.includes("status")) specificity += 0.5;
+      break;
+    case "system-architecture.md":
+      if (mermaidDiagrams > 0) specificity += 0.5;
+      if (lower.includes("component") || lower.includes("service")) specificity += 0.5;
+      break;
+    case "database-schema.md":
+      if (mermaidDiagrams > 0 || lower.includes("erdiagram") || lower.includes("create table")) specificity += 0.5;
+      if (lower.includes("relationship") || lower.includes("foreign key") || lower.includes("index")) specificity += 0.5;
+      break;
+    case "api-spec.md":
+      if (lower.includes("endpoint") || lower.includes("route")) specificity += 0.4;
+      if (lower.includes("request") && lower.includes("response")) specificity += 0.3;
+      if (lower.includes("auth")) specificity += 0.3;
+      break;
+    case "data-models.md":
+      if (codeBlocks > 0 || lower.includes("interface") || lower.includes("type ")) specificity += 0.5;
+      if (lower.includes("validation") || lower.includes("enum")) specificity += 0.5;
+      break;
+    case "tech-stack.md":
+      if (lower.includes("version") || lower.includes("dependency")) specificity += 0.5;
+      if (lower.includes("framework") || lower.includes("runtime")) specificity += 0.5;
+      break;
+    case "testing.md":
+      if (lower.includes("test case") || lower.includes("coverage") || lower.includes("spec")) specificity += 0.5;
+      if (lower.includes("command") || lower.includes("npm test") || lower.includes("jest") || lower.includes("vitest")) specificity += 0.5;
+      break;
+    case "deployment.md":
+      if (lower.includes("ci/cd") || lower.includes("pipeline") || lower.includes("docker")) specificity += 0.5;
+      if (lower.includes("environment") || lower.includes("production")) specificity += 0.5;
+      break;
+    default:
+      specificity = words > minWords ? 1 : 0.5;
+      break;
+  }
+  score += Math.min(specificity, 1) * 0.15;
+
+  return Math.min(score, 1);
+}
+
 function computeReadiness(docs: BlueprintDocument[]): { score: number; items: ReadinessItem[] } {
-  const docNames = new Set(docs.map((d) => d.name + ".md"));
+  const docMap = new Map(docs.map((d) => [d.name + ".md", d]));
   const items: ReadinessItem[] = [];
-  let filled = 0;
+  let totalWeightedScore = 0;
+  let totalWeight = 0;
 
   for (const expected of EXPECTED_DOCUMENTS) {
     const docType = expected.replace(/\.md$/, "");
     const label = DOC_LABELS[expected] || docType;
+    const weight = DOC_WEIGHTS[expected] || 2;
+    totalWeight += weight;
 
-    if (docNames.has(expected)) {
-      const doc = docs.find((d) => d.name + ".md" === expected);
-      if (doc && doc.content.trim().length > 20) {
-        const lastMod = new Date(doc.lastModified);
-        const daysSince = (Date.now() - lastMod.getTime()) / 86400000;
-        if (daysSince > 7) {
-          items.push({ docType, label, status: "stale", detail: `Last updated ${Math.floor(daysSince)}d ago` });
-        } else {
-          items.push({ docType, label, status: "complete" });
-          filled++;
-        }
-      } else {
-        items.push({ docType, label, status: "partial", detail: "Document exists but has minimal content" });
-      }
-    } else {
+    const doc = docMap.get(expected);
+    if (!doc) {
       items.push({ docType, label, status: "missing" });
+      continue;
+    }
+
+    const words = doc.content.split(/\s+/).length;
+    const minWords = DOC_MIN_WORDS[expected] || 50;
+
+    if (words < 15) {
+      items.push({ docType, label, status: "missing", detail: "Document is essentially empty" });
+      continue;
+    }
+
+    const depthScore = scoreDocumentDepth(expected, doc.content);
+
+    // Check staleness
+    const lastMod = new Date(doc.lastModified);
+    const daysSince = (Date.now() - lastMod.getTime()) / 86400000;
+    const freshnessPenalty = daysSince > 30 ? 0.3 : daysSince > 14 ? 0.15 : daysSince > 7 ? 0.05 : 0;
+    const finalScore = Math.max(depthScore - freshnessPenalty, 0);
+
+    totalWeightedScore += finalScore * weight;
+
+    if (words < minWords) {
+      items.push({ docType, label, status: "partial", detail: `Thin content (${words} words, need ~${minWords})` });
+    } else if (daysSince > 14) {
+      items.push({ docType, label, status: "stale", detail: `Last updated ${Math.floor(daysSince)}d ago` });
+    } else if (depthScore < 0.5) {
+      items.push({ docType, label, status: "partial", detail: "Lacks depth — missing structure, diagrams, or specifics" });
+    } else {
+      items.push({ docType, label, status: "complete" });
     }
   }
 
-  return { score: Math.round((filled / EXPECTED_DOCUMENTS.length) * 100), items };
+  // Check for flows — bonus
+  const flowDocs = docs.filter((d) => d.path.includes("/flows/"));
+  if (flowDocs.length === 0) {
+    totalWeight += 5;
+    // No bonus added — missing flows costs 5 points
+  } else {
+    totalWeight += 5;
+    const flowScore = Math.min(flowDocs.length / 3, 1); // 3+ flows = full marks
+    totalWeightedScore += flowScore * 5;
+  }
+
+  const score = totalWeight > 0 ? Math.round((totalWeightedScore / totalWeight) * 100) : 0;
+  return { score, items };
 }
 
 // ---------------------------------------------------------------------------
