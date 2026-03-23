@@ -9,12 +9,12 @@ The user has requested a complete resynchronization of the `.blueprint/` folder.
 
 ### Steps
 
-1. **Check for spec documents first.** Look for files like `spec.md`, `SPEC.md`, `specification.md`, `product-spec.md`, `requirements.md`, `PRD.md`, `brief.md`, `overview.md`, or any markdown file in a `docs/`, `spec/`, or `specs/` folder. If found, use them as the authoritative baseline — they take priority over inferences from code. Cross-reference spec with code and flag discrepancies.
+1. **MANDATORY: Search for and read spec documents.** Use Glob to search for `*spec*`, `*requirement*`, `*brief*`, `*overview*`, `*PRD*` in the project root, and search `docs/`, `spec/`, `specs/` folders. Read EVERY match. These are the **authoritative source of truth** for what the product should do. The PRD blueprint MUST be based on these specs. All other blueprint documents must reference and align with spec content. If no spec is found, note this in the output.
 2. Read every existing `.blueprint/*.md` file to preserve manual annotations
-3. Re-analyze the entire codebase (same process as `/blueprint`)
-4. Regenerate all documents, merging in preserved annotations
+3. Re-analyze the entire codebase
+4. Regenerate all documents — the spec content takes priority over code inferences. If the code doesn't match the spec, flag it as a gap in the relevant blueprint document.
 5. Update `.blueprint/.blueprint-meta.json` with new sync timestamps
-6. Report what changed and the updated Rebuild Readiness Score
+6. Report what changed, any spec-vs-code gaps found, and the updated Rebuild Readiness Score
 
 ### Important
 

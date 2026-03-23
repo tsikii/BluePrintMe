@@ -30,7 +30,7 @@ Scan the codebase and create/update the following files in `.blueprint/`:
 
 ### How to analyze
 
-1. **Check for spec documents first.** Look for files like `spec.md`, `SPEC.md`, `specification.md`, `product-spec.md`, `requirements.md`, `PRD.md`, `brief.md`, `overview.md`, or any markdown file in a `docs/`, `spec/`, or `specs/` folder that describes the product vision, requirements, or features. If found, read them and use them as the authoritative baseline — they take priority over inferences from code. Use spec content to populate `.blueprint/prd.md` (features, acceptance criteria, user personas, product goals) and to inform all other blueprint documents (architecture decisions, data models, API design, flows).
+1. **MANDATORY: Search for and read spec documents.** Use Glob to search for `*spec*`, `*requirement*`, `*brief*`, `*overview*`, `*PRD*` in the project root, and search `docs/`, `spec/`, `specs/` folders. Read EVERY match. These are the **authoritative source of truth** for what the product should do. The `.blueprint/prd.md` MUST be based on these specs — features, acceptance criteria, user personas, product goals all come from the spec first, supplemented by code analysis. All other blueprint documents must reference and align with spec content. If no spec is found, note this in the output.
 2. Read the project's package.json / requirements.txt / Cargo.toml / go.mod etc.
 3. Scan the file tree structure using Glob
 4. Read key source files to understand architecture
